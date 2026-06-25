@@ -1,155 +1,111 @@
 import streamlit as st
 import pandas as pd
 import re
-import io
 
-st.set_page_config(page_title="电池数据自动化清洗分流工具", layout="wide", initial_sidebar_state="expanded")
+# 强制全宽，锁死单屏
+st.set_page_config(page_title="电池数据自动化清洗分流中心", layout="wide", initial_sidebar_state="collapsed")
 
-# 界面标题
-st.title("🔋 电池数据自动化清洗分流工具")
-st.caption("老大专属定制版 - 严格执行全套数据铁律，数据百分百高度可控")
-st.write("---")
+# --- 🌟 霓虹弥散背景 + 极简纯净磨砂玻璃 CSS 魔改 ---
+st.markdown("""
+    <style>
+    /* 1. 动态霓虹弥散渐变背景 */
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(125deg, #ff7b90, #ae77ff, #60c3ff, #00ea9a) !important;
+        background-size: 400% 400% !important;
+        animation: gradientBG 15s ease infinite !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* 隐藏页眉和页脚 */
+    [data-testid="stHeader"], footer, [data-testid="stDecoration"] { display: none !important; }
+    
+    .block-container {
+        padding: 2.5rem 4rem 1.5rem 4rem !important;
+        height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+    }
+    
+    /* 2. 扁平极简白色磨砂玻璃大卡片（无描边，更纯净） */
+    .apple-card {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(30px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+        border-radius: 24px !important;
+        border: none !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+        padding: 2rem !important;
+        margin: 0 auto !important;
+        max-width: 1200px !important;
+        width: 100%;
+    }
+    
+    /* 3. 标题样式 */
+    .main-title {
+        color: #111111 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+        font-weight: 700 !important;
+        font-size: 2.2rem !important;
+        letter-spacing: -0.03em;
+        margin-bottom: 0.2rem;
+    }
+    .sub-title {
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
 
-# ================= 1. 侧边栏：开跑前的格式皮肤勾选 =================
-st.sidebar.header("📐 尺寸格式配置")
-size_unit = st.sidebar.selectbox("尺寸单位换算", ["保持 MM", "换算成 CM"])
-size_prefix = st.sidebar.checkbox("带“长宽高”汉字前缀", value=True)
+    /* 4. 下方分流结果卡片样式 */
+    .result-container {
+        display: flex;
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto !important;
+        width: 100%;
+        height: 42vh !important;
+        margin-bottom: 1rem !important;
+    }
+    .sub-card {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(20px) !important;
+        border-radius: 20px !important;
+        padding: 1.2rem !important;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03) !important;
+    }
+    .sub-card h3 {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #111111 !important;
+        margin-bottom: 0.6rem !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-st.sidebar.write("---")
-st.sidebar.header("🔋 续航格式配置")
-range_mode = st.sidebar.selectbox("数字提取模式", ["保留区间（如 80-100）", "只要最大值（如 100）"])
-range_unit = st.sidebar.selectbox("续航单位选择", ["大写 KM", "中文 公里", "纯数字（无单位）"])
-range_prefix_opt = st.sidebar.selectbox("修饰前缀", ["无前缀", "加“续航”", "加“参考”", "加“约”"])
+# ==================== 页面头部 ====================
+st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">电池数据自动化清洗分流中心</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">Neon Gradient Style · 严格遵循配置铁律校验</p>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# ================= 2. 主界面：文件拖拽上传 =================
-uploaded_file = st.file_uploader("请拖拽或选择你要清洗的 Excel 文件 (.xlsx)", type=["xlsx"])
+# ==================== 中央操控卡片（扁平玻璃风格） ====================
+st.markdown('<div class="apple-card">', unsafe_allow_html=True)
 
-if uploaded_file:
-    try:
-        # 读取 Excel，不设表头
-        df = pd.read_excel(uploaded_file, header=None)
-        
-        # 铁律：向下填充前三列合并单元格（电芯、电压、款式）
-        df[0] = df[0].ffill()
-        df[1] = df[1].ffill()
-        df[2] = df[2].ffill()
-        
-        # 数据行从第4行（索引3）开始
-        data_rows = df.iloc[3:].copy()
-        cleaned_data = []
-        brake_triggered = False
-        brake_reason = ""
+col_file, col_opt1, col_opt2 = st.columns([1.8, 1, 1], gap="large")
 
-        for idx, row in data_rows.iterrows():
-            style = str(row[2]).strip()
-            # 过滤掉非立式、卧式的杂行
-            if style not in ['立式', '卧式']:
-                continue
-                
-            sku_text = str(row[9]).strip() if pd.notna(row[9]) else ""
-            
-            # --- 🔋 电池规格提取与纠错 (第一列锁死) ---
-            v_raw = str(row[1]).strip().upper()
-            v_str = v_raw if "V" in v_raw else (v_raw + "V" if v_raw.isdigit() else "未知V")
-            if v_str == "未知V":
-                v_m = re.search(r'(\d+)\s*V', sku_text, re.IGNORECASE)
-                if v_m: v_str = v_m.group(1) + "V"
+with col_file:
+    uploaded_file = st.file_uploader("📥 将 Excel 表格拖拽至此处上传 (.xlsx)", type=["xlsx"])
 
-            ah_m = re.search(r'(\d+)\s*AH', sku_text, re.IGNORECASE)
-            if not ah_m: ah_m = re.search(r'(\d+)\s*A(?!M)', sku_text, re.IGNORECASE)
-            if not ah_m: ah_m = re.search(r'\d+\s*[vV]\s*(\d+)', sku_text)
-            ah_str = ah_m.group(1) + "AH" if ah_m else "未知AH"
-            spec = f"{v_str}{ah_str}"
-            
-            # --- 📐 尺寸处理（触发异常刹车机制） ---
-            size_raw = str(row[3]).strip()
-            dims = re.split(r'[*xX×]', size_raw)
-            
-            # 刹车机制：只要不是标准长宽高3项，或是空数字，直接抛出异常
-            if len(dims) != 3 or size_raw.isdigit():
-                brake_triggered = True
-                brake_reason = f"行 {idx+1} 尺寸数据残缺、不规范或为纯裸数字: 【{size_raw}】，触发安全刹车！"
-                break
-                
-            try:
-                d_nums = [float(d.strip()) for d in dims]
-            except:
-                brake_triggered = True
-                brake_reason = f"行 {idx+1} 尺寸含有无法解析的非数字内容: 【{size_raw}】，触发安全刹车！"
-                break
-                
-            # 单位换算与去.0逻辑
-            if size_unit == "换算成 CM":
-                d_nums = [n / 10 for n in d_nums]
-                d_strs = [str(int(n)) if n.is_integer() else str(n) for n in d_nums]
-                unit_label = "CM"
-            else:
-                d_strs = [str(int(n)) if n.is_integer() else str(n) for n in d_nums]
-                unit_label = "MM"
-                
-            if size_prefix:
-                l_str, w_str, h_str = f"长{d_strs[0]}{unit_label}", f"宽{d_strs[1]}{unit_label}", f"高{d_strs[2]}{unit_label}"
-            else:
-                l_str, w_str, h_str = f"{d_strs[0]}{unit_label}", f"{d_strs[1]}{unit_label}", f"{d_strs[2]}{unit_label}"
-                
-            # --- 🔋 续航处理 ---
-            range_m = re.search(r'([\d\-]+)\s*km', sku_text, re.IGNORECASE)
-            if not range_m: range_m = re.search(r'([\d\-]+)\s*公里', sku_text)
-            
-            if range_m:
-                raw_val = range_m.group(1)
-                if "-" in raw_val and range_mode == "只要最大值（如 100）":
-                    final_num = raw_val.split("-")[-1].strip()
-                else:
-                    final_num = raw_val
-            else:
-                final_num = "未知"
-                
-            u_suffix = "" if range_unit == "纯数字（无单位）" else ("KM" if range_unit == "大写 KM" else "公里")
-            p_prefix = "" if range_prefix_opt == "无前缀" else (range_prefix_opt.replace("加“", "").replace("”", ""))
-            
-            range_final = f"{p_prefix}{final_num}{u_suffix}" if final_num != "未知" else "未知"
-            
-            # --- 📱 蓝牙智能处理 ---
-            is_bluetooth = "TRUE" if "蓝牙" in sku_text or "蓝牙" in str(row[5]) else "FALSE"
-            
-            # 装配规范字典（款式仅作在后台分流用）
-            cleaned_data.append({
-                "电池规格": spec,
-                "款式": style,
-                "长": l_str,
-                "宽": w_str,
-                "高": h_str,
-                "续航": range_final,
-                "蓝牙": is_bluetooth
-            })
-            
-        # ================= 3. 结果渲染与分表下载 =================
-        if brake_triggered:
-            st.error(f"🛑 发现错误：{brake_reason}")
-            st.warning("请先去原始 Excel 表里修正该行数据，然后再重新上传。")
-        else:
-            # 转换为 DataFrame
-            res_df = pd.DataFrame(cleaned_data)
-            
-            # 物理分流，并彻底剔除【款式】那一列
-            lishi_df = res_df[res_df['款式'] == '立式'].drop(columns=['款式'])
-            woshi_df = res_df[res_df['款式'] == '卧式'].drop(columns=['款式'])
-            
-            st.success("🎉 数据全部清洗完毕！已严格按照您勾选的皮肤自动拼装。")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("📂 立式电池结果 (款式列已剔除)")
-                st.dataframe(lishi_df)
-                csv_li = lishi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("📥 下载《立式_电池数据.csv》", data=csv_li, file_name="立式_电池数据.csv", mime="text/csv")
-                
-            with col2:
-                st.subheader("📂 卧式电池结果 (款式列已剔除)")
-                st.dataframe(woshi_df)
-                csv_wo = woshi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("📥 下载《卧式_电池数据.csv》", data=csv_wo, file_name="卧式_电池数据.csv", mime="text/csv")
-                
-    except Exception as e:
-        st.error(f"导入表格失败，请确认表格结构是否被改动。报错信息: {e}")
+with col_opt1:
+    st.markdown("<b style='color:#111;'>📐 尺寸配置方案</b>", unsafe_allow_html=True)
+    size_unit = st.selectbox("单位转换",
