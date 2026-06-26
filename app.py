@@ -1,119 +1,184 @@
 import streamlit as st
 import pandas as pd
 import re
+import base64
 
-# 1. 必须放在最前面：强制全宽，隐藏默认布局
-st.set_page_config(page_title="电池数据自动化清洗分流中心", layout="wide", initial_sidebar_state="collapsed")
+# 1. 锁死全宽，干掉系统默认多余白边
+st.set_page_config(page_title="电池数据清洗中心", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. 🚨 核心修复：强制注入最高优先级的 CSS 全局样式，砸碎 Streamlit 的默认纯白皮肤
+# 2. 彻底接管网页样式：强制注入图二的高冷深邃暗夜底色
 st.markdown("""
     <style>
-    /* 彻底重写主体，强制变为图二的深邃暗夜弥散背景 */
-    html, body, [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #0d1117 0%, #161b22 30%, #0f2042 60%, #1f1135 100%) !important;
-        background-color: #0d1117 !important;
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background: linear-gradient(140deg, #0b0f19 0%, #111827 40%, #071630 80%, #160d29 100%) !important;
+        background-color: #0b0f19 !important;
         color: #ffffff !important;
     }
+    [data-testid="stHeader"], footer, [data-testid="stDecoration"] { display: none !important; }
+    .block-container { padding: 2.5rem 5rem !important; }
     
-    /* 隐藏 Streamlit 顶部多余的白条和页脚 */
-    [data-testid="stHeader"], footer, [data-testid="stDecoration"] { 
-        display: none !important; 
+    /* 强行抹去系统文件上传器多余的灰色背景，只留纯粹功能 */
+    [data-testid="stFileUploaderDropzone"] {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+        border-radius: 16px !important;
     }
+    [data-testid="stFileUploaderDropzone"] * { color: rgba(255,255,255,0.7) !important; }
     
-    /* 重新规划全局内边距 */
-    .block-container {
-        padding: 2rem 5rem !important;
-    }
-    
-    /* 强行复刻图二：高浓度、厚重白透磨砂玻璃大面板 */
+    /* 彻底重构：图二中高纯度、厚重白透的磨砂卡片大外壳 */
     .premium-glass-card {
-        background: rgba(255, 255, 255, 0.92) !important;
-        backdrop-filter: blur(30px) saturate(160%) !important;
-        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(40px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
         border-radius: 24px !important;
-        border: 1px solid rgba(255, 255, 255, 0.6) !important;
-        padding: 30px !important;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
-        margin-bottom: 25px !important;
+        padding: 35px !important;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4) !important;
+        margin-bottom: 30px !important;
+        width: 100%;
     }
     
-    /* 控制台和预览框内的文字全部锁死为高级黑/深灰 */
-    .premium-glass-card *, .data-sub-card * {
+    /* 大操盘内的标签文字：全部锁死为高级加粗黑 */
+    .control-label {
         color: #000000 !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        margin-bottom: 8px;
+        display: block;
     }
     
-    /* 顶层无衬线高级大标题 */
+    /* 顶层高冷排版标题 */
     .app-title {
         color: #ffffff !important;
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
         font-weight: 800 !important;
-        font-size: 2.3rem !important;
+        font-size: 2.4rem !important;
         text-align: center;
-        margin-bottom: 5px;
         letter-spacing: -0.03em;
+        margin-bottom: 5px;
     }
     .app-subtitle {
-        color: rgba(255, 255, 255, 0.4) !important;
-        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.35) !important;
+        font-size: 0.85rem;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 35px;
         letter-spacing: 0.15em;
     }
     
-    /* 双表并排的高级半透明小卡片 */
-    .data-sub-card {
-        background: rgba(255, 255, 255, 0.96) !important;
-        border-radius: 16px !important;
-        padding: 20px !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    /* 🚨 核心秘密：用自定义 HTML 彻底重写表格，击碎官方巨丑的灰色原生表格 */
+    .custom-table-container {
+        background: rgba(255, 255, 255, 0.98) !important;
+        border-radius: 20px !important;
+        padding: 24px !important;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15) !important;
+        width: 100%;
+        margin-top: 10px;
     }
-    .data-sub-card h3 {
-        font-size: 1.15rem !important;
+    .custom-table-title {
+        font-size: 1.2rem !important;
+        font-weight: 800 !important;
+        color: #000000 !important;
+        margin-bottom: 15px !important;
+    }
+    .apple-style-table {
+        width: 100%;
+        border-collapse: collapse !important;
+        margin-bottom: 20px;
+    }
+    .apple-style-table th {
+        background-color: #f5f5f7 !important;
+        color: #1d1d1f !important;
         font-weight: 700 !important;
-        margin-bottom: 12px !important;
+        text-align: left !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        border: none !important;
+    }
+    .apple-style-table td {
+        padding: 14px 16px !important;
+        color: #000000 !important;
+        font-size: 0.95rem !important;
+        font-weight: 500 !important;
+        border-bottom: 1px solid #e8e8ed !important;
+    }
+    .apple-style-table tr:last-child td {
+        border-bottom: none !important;
     }
     
-    /* 强行美化 Streamlit 原生的灰色上传框 */
-    [data-testid="stFileUploaderDropzone"] {
-        background: rgba(0, 0, 0, 0.03) !important;
-        border: 2px dashed rgba(0, 0, 0, 0.15) !important;
-        border-radius: 14px !important;
+    /* 自定义纯平大按钮 */
+    .custom-download-btn {
+        display: inline-block;
+        background: #000000 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        padding: 10px 22px !important;
+        border-radius: 10px !important;
+        text-decoration: none !important;
+        font-size: 0.9rem !important;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    .custom-download-btn:hover {
+        background: #232325 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# ==================== 顶部文字标题（网页大底背景之上） ====================
+# ==================== 顶层标题排版 ====================
 st.markdown('<div class="app-title">电池数据自动化清洗分流中心</div>', unsafe_allow_html=True)
-st.markdown('<div class="app-subtitle">PREMIUM MINIMALIST DESIGN · SHIFTING AURORA</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-subtitle">PREMIUM MINIMALIST HARDWARE CONTROL PANEL</div>', unsafe_allow_html=True)
 
-# ==================== 核心操控磨砂面板 ====================
+# ==================== 图二同款：中央大操盘 ====================
 st.markdown('<div class="premium-glass-card">', unsafe_allow_html=True)
 
-col_file, col_opt1, col_opt2 = st.columns([1.5, 1, 1], gap="large")
+col_file, col_opt1, col_opt2 = st.columns([1.6, 1, 1], gap="large")
 
 with col_file:
-    st.markdown("<b style='font-size:1rem;'>文件上传控制台</b>", unsafe_allow_html=True)
+    st.markdown('<span class="control-label">文件上传控制台</span>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("请选择或拖拽 Excel 表格 (.xlsx)", type=["xlsx"], label_visibility="collapsed")
 
 with col_opt1:
-    st.markdown("<b style='font-size:1rem;'>尺寸格式配置</b>", unsafe_allow_html=True)
-    size_unit = st.selectbox("数据单位", ["保持 MM", "换算成 CM"], label_visibility="collapsed")
+    st.markdown('<span class="control-label">尺寸单位配置</span>', unsafe_allow_html=True)
+    size_unit = st.selectbox("单位转换", ["保持 MM", "换算成 CM"], label_visibility="collapsed")
     size_prefix = st.checkbox("增加“长宽高”汉字前缀", value=True)
 
 with col_opt2:
-    st.markdown("<b style='font-size:1rem;'>续航解析配置</b>", unsafe_allow_html=True)
-    range_mode = st.selectbox("数字解析模式", ["保留区间（如 80-100）", "只要最大值"], label_visibility="collapsed")
+    st.markdown('<span class="control-label">续航数据解析</span>', unsafe_allow_html=True)
+    range_mode = st.selectbox("数字过滤", ["保留区间（如 80-100）", "只要最大值"], label_visibility="collapsed")
     range_unit = st.selectbox("后缀单位", ["大写 KM", "中文 公里", "纯数字"], label_visibility="collapsed")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ==================== 下方结果分流展示区 ====================
+# ==================== 函数：将生成的 DataFrame 强行渲染成纯净的 HTML 高级表格 ====================
+def render_custom_table(dataframe, title, filename):
+    csv_data = dataframe.to_csv(index=False, encoding='utf-8-sig')
+    b64 = base64.b64encode(csv_data.encode('utf-8-sig')).decode()
+    download_href = f'<a href="data:file/csv;base64,{b64}" download="{filename}" class="custom-download-btn">📥 导出清洗后表格 (.csv)</a>'
+    
+    # 构建纯净、100%可控的 HTML 表格
+    html_str = f'<div class="custom-table-container">'
+    html_str += f'<div class="custom-table-title">{title}</div>'
+    html_str += '<table class="apple-style-table"><thead><tr>'
+    for col in dataframe.columns:
+        html_str += f'<th>{col}</th>'
+    html_str += '</tr></thead><tbody>'
+    
+    for _, row in dataframe.iterrows():
+        html_str += '<tr>'
+        for cell in row:
+            html_str += f'<td>{cell}</td>'
+        html_str += '</tr>'
+    html_str += '</tbody></table>'
+    html_str += f'<div style="text-align: right; margin-top: 15px;">{download_href}</div>'
+    html_str += '</div>'
+    return html_str
+
+# ==================== 自动化核心逻辑区 ====================
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, header=None)
         
-        # 铁律：向下填充合并单元格
+        # 填充单元格合并
         df[0] = df[0].ffill()
         df[1] = df[1].ffill()
         df[2] = df[2].ffill()
@@ -188,32 +253,25 @@ if uploaded_file:
             })
             
         if brake_triggered:
-            st.markdown(f'<p style="color:#ff4b4b; font-weight:700; text-align:center;">🛑 {brake_reason}</p>', unsafe_allow_html=True)
+            st.markdown(f'<p style="color:#ff4b4b; font-weight:700; text-align:center; font-size:1.1rem; margin-top:20px;">🛑 {brake_reason}</p>', unsafe_allow_html=True)
         else:
             res_df = pd.DataFrame(cleaned_data)
             lishi_df = res_df[res_df['款式'] == '立式'].drop(columns=['款式'])
             woshi_df = res_df[res_df['款式'] == '卧式'].drop(columns=['款式'])
             
+            # 双列布局，完美吐出 HTML 精致双表格
             res_col1, res_col2 = st.columns(2, gap="large")
             with res_col1:
-                st.markdown('<div class="data-sub-card"><h3>📊 立式电池分流中心</h3>', unsafe_allow_html=True)
-                st.dataframe(lishi_df, use_container_width=True, height=260)
-                csv_li = lishi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("导出立式数据 (.csv)", data=csv_li, file_name="立式_电池数据.csv", mime="text/csv")
-                st.markdown('</div>', unsafe_allow_html=True)
-                
+                st.markdown(render_custom_table(lishi_df, "📊 立式电池自动清洗中心", "立式_电池数据.csv"), unsafe_allow_html=True)
             with res_col2:
-                st.markdown('<div class="data-sub-card"><h3>📊 卧式电池分流中心</h3>', unsafe_allow_html=True)
-                st.dataframe(woshi_df, use_container_width=True, height=260)
-                csv_wo = woshi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("导出卧式数据 (.csv)", data=csv_wo, file_name="卧式_电池数据.csv", mime="text/csv")
-                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown(render_custom_table(woshi_df, "📊 卧式电池自动清洗中心", "卧式_电池数据.csv"), unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"表格读取故障: {e}")
+        st.error(f"表格格式读取失败，请检查结构: {e}")
 else:
+    # 默认状态卡片
     st.markdown("""
-        <div class="data-sub-card" style="text-align: center; padding: 40px 0; color: rgba(0,0,0,0.4); font-weight:600;">
-            📥 请在上方控制台上传 Excel 表格文件，系统将自动清洗并在此展示双表分流结果
+        <div class="custom-table-container" style="text-align: center; padding: 50px 0; color: rgba(0,0,0,0.4); font-weight:700; font-size:1.05rem;">
+            📥 请在上方白色大盘中上传 Excel 电池原始数据，系统将自动彻底清洗并在此生成图二同款纯净双表
         </div>
     """, unsafe_allow_html=True)
