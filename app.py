@@ -5,121 +5,118 @@ import re
 # 强制全宽，锁死单屏
 st.set_page_config(page_title="电池数据自动化清洗分流中心", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 🌟 霓虹弥散背景 + 极简纯净磨砂玻璃 CSS 魔改 ---
+# --- 🌟 完美复刻第二张图：高冷静谧微光 + 厚重极简纯净磨砂玻璃卡片 ---
 st.markdown("""
     <style>
-    /* 1. 动态霓虹弥散渐变背景 */
+    /* 1. 静谧冷色调暗夜弥散渐变背景 */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(125deg, #ff7b90, #ae77ff, #60c3ff, #00ea9a) !important;
+        background: linear-gradient(135deg, #0d1117, #161b22, #0f2042, #1f1135, #0b2e36) !important;
         background-size: 400% 400% !important;
-        animation: gradientBG 15s ease infinite !important;
+        animation: slowGradient 20s ease infinite !important;
         height: 100vh !important;
         overflow: hidden !important;
     }
-    @keyframes gradientBG {
+    @keyframes slowGradient {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
     
-    /* 隐藏页眉和页脚 */
+    /* 隐藏所有多余组件 */
     [data-testid="stHeader"], footer, [data-testid="stDecoration"] { display: none !important; }
     
     .block-container {
-        padding: 2.5rem 4rem 1.5rem 4rem !important;
+        padding: 3rem 5rem 2rem 5rem !important;
         height: 100vh !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: space-between !important;
+        justify-content: flex-start !important;
     }
     
-    /* 2. 扁平极简白色磨砂玻璃大卡片（无描边，更纯净） */
-    .apple-card {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(30px) saturate(160%) !important;
-        -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
-        border-radius: 24px !important;
-        border: none !important;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
-        padding: 2rem !important;
+    /* 2. 纯净厚重磨砂玻璃大卡片（高饱和白透，带精致微弱内描边） */
+    .premium-apple-card {
+        background: rgba(255, 255, 255, 0.88) !important;
+        backdrop-filter: blur(40px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+        border-radius: 28px !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+        padding: 2.5rem !important;
         margin: 0 auto !important;
         max-width: 1200px !important;
         width: 100%;
     }
     
-    /* 3. 标题样式 */
+    /* 3. 极简高级文字排版 */
     .main-title {
-        color: #111111 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-        font-weight: 700 !important;
-        font-size: 2.2rem !important;
-        letter-spacing: -0.03em;
-        margin-bottom: 0.2rem;
+        color: #000000 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+        font-weight: 800 !important;
+        font-size: 2.5rem !important;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.3rem;
+        text-align: center;
     }
     .sub-title {
-        color: rgba(0, 0, 0, 0.5);
-        font-size: 0.95rem;
-        margin-bottom: 1.5rem;
+        color: rgba(0, 0, 0, 0.4) !important;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        text-align: center;
+        letter-spacing: 0.05em;
     }
 
-    /* 4. 下方分流结果卡片样式 */
-    .result-container {
+    /* 4. 下方数据展示精致独立卡片 */
+    .result-section {
         display: flex;
-        gap: 24px;
+        gap: 32px;
         max-width: 1200px;
-        margin: 0 auto !important;
+        margin: 1.5rem auto 0 auto !important;
         width: 100%;
-        height: 42vh !important;
-        margin-bottom: 1rem !important;
     }
-    .sub-card {
+    .data-sub-card {
         flex: 1;
-        background: rgba(255, 255, 255, 0.85) !important;
-        backdrop-filter: blur(20px) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
         border-radius: 20px !important;
-        padding: 1.2rem !important;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
     }
-    .sub-card h3 {
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        color: #111111 !important;
-        margin-bottom: 0.6rem !important;
+    .data-sub-card h3 {
+        font-size: 1.2rem !important;
+        font-weight: 700 !important;
+        color: #000000 !important;
+        margin-bottom: 0.8rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # ==================== 页面头部 ====================
-st.markdown('<div style="text-align: center;">', unsafe_allow_html=True)
 st.markdown('<h1 class="main-title">电池数据自动化清洗分流中心</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Neon Gradient Style · 严格遵循配置铁律校验</p>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<p class="sub-title">PREMIUM MINIMALIST DESIGN · DATA AUTOMATION</p>', unsafe_allow_html=True)
 
-# ==================== 中央操控卡片（扁平玻璃风格） ====================
-st.markdown('<div class="apple-card">', unsafe_allow_html=True)
+# ==================== 中央操控大盘 ====================
+st.markdown('<div class="premium-apple-card">', unsafe_allow_html=True)
 
-col_file, col_opt1, col_opt2 = st.columns([1.8, 1, 1], gap="large")
+col_file, col_opt1, col_opt2 = st.columns([1.6, 1, 1], gap="large")
 
 with col_file:
-    uploaded_file = st.file_uploader("📥 将 Excel 表格拖拽至此处上传 (.xlsx)", type=["xlsx"])
+    st.markdown("<span style='color:#000000; font-weight:700; font-size:1.05rem;'>文件上传</span>", unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("请拖拽或选择 Excel 文件 (.xlsx)", type=["xlsx"], label_visibility="collapsed")
 
 with col_opt1:
-    st.markdown("<b style='color:#111;'>📐 尺寸配置方案</b>", unsafe_allow_html=True)
-    size_unit = st.selectbox("单位转换", ["换算成 CM", "保持 MM"], label_visibility="collapsed")
-    size_prefix = st.checkbox("加上“长宽高”文字前缀", value=True)
+    st.markdown("<span style='color:#000000; font-weight:700; font-size:1.05rem;'>尺寸格式配置</span>", unsafe_allow_html=True)
+    size_unit = st.selectbox("单位处理", ["保持 MM", "换算成 CM"], label_visibility="collapsed")
+    size_prefix = st.checkbox("加上“长宽高”汉字前缀", value=True)
 
 with col_opt2:
-    st.markdown("<b style='color:#111;'>🔋 续航配置模式</b>", unsafe_allow_html=True)
-    range_mode = st.selectbox("数字解析模式", ["保留区间（如 80-100）", "只要最大值"], label_visibility="collapsed")
-    range_unit = st.selectbox("单位样式选择", ["大写 KM", "中文 公里", "纯数字"], label_visibility="collapsed")
+    st.markdown("<span style='color:#000000; font-weight:700; font-size:1.05rem;'>续航数据模式</span>", unsafe_allow_html=True)
+    range_mode = st.selectbox("数字解析", ["保留区间（如 80-100）", "只要最大值"], label_visibility="collapsed")
+    range_unit = st.selectbox("单位选择", ["大写 KM", "中文 公里", "纯数字"], label_visibility="collapsed")
 
 st.markdown('</div>', unsafe_allow_html=True)
-st.write("") 
 
-# ==================== 下方数据结果分流展示区 ====================
+# ==================== 数据分流展示区 ====================
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file, header=None)
@@ -153,7 +150,7 @@ if uploaded_file:
             ah_str = ah_m.group(1) + "AH" if ah_m else "未知AH"
             spec = f"{v_str}{ah_str}"
             
-            # --- 尺寸提取与刹车 ---
+            # --- 尺寸提取 ---
             size_raw = str(row[3]).strip()
             dims = re.split(r'[*xX×]', size_raw)
             if len(dims) != 3 or size_raw.isdigit():
@@ -199,36 +196,36 @@ if uploaded_file:
             })
             
         if brake_triggered:
-            st.error(f"🛑 {brake_reason}")
+            st.markdown(f'<div style="max-width:1200px; margin:1rem auto;"><p style="color:#ff4b4b; font-weight:700;">🛑 {brake_reason}</p></div>', unsafe_allow_html=True)
         else:
             res_df = pd.DataFrame(cleaned_data)
             lishi_df = res_df[res_df['款式'] == '立式'].drop(columns=['款式'])
             woshi_df = res_df[res_df['款式'] == '卧式'].drop(columns=['款式'])
             
-            # 渲染结果分流双卡片
+            st.markdown('<div class="result-section">', unsafe_allow_html=True)
             res_col1, res_col2 = st.columns(2)
             with res_col1:
-                st.markdown('<div class="sub-card"><h3>📋 立式分流数据</h3>', unsafe_allow_html=True)
-                st.dataframe(lishi_df, use_container_width=True, height=200)
+                st.markdown('<div class="data-sub-card"><h3>立式电池数据</h3>', unsafe_allow_html=True)
+                st.dataframe(lishi_df, use_container_width=True, height=220)
                 csv_li = lishi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("📥 下载立式表格 (.csv)", data=csv_li, file_name="立式_电池数据.csv", mime="text/csv")
+                st.download_button("下载立式数据 (.csv)", data=csv_li, file_name="立式_电池数据.csv", mime="text/csv")
                 st.markdown('</div>', unsafe_allow_html=True)
                 
             with res_col2:
-                st.markdown('<div class="sub-card"><h3>📋 卧式分流数据</h3>', unsafe_allow_html=True)
-                st.dataframe(woshi_df, use_container_width=True, height=200)
+                st.markdown('<div class="data-sub-card"><h3>卧式电池数据</h3>', unsafe_allow_html=True)
+                st.dataframe(woshi_df, use_container_width=True, height=220)
                 csv_wo = woshi_df.to_csv(index=False, encoding='utf-8-sig')
-                st.download_button("📥 下载卧式表格 (.csv)", data=csv_wo, file_name="卧式_电池数据.csv", mime="text/csv")
+                st.download_button("下载卧式数据 (.csv)", data=csv_wo, file_name="卧式_电池数据.csv", mime="text/csv")
                 st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"表格格式读取失败: {e}")
 else:
-    # 未上传状态时的占位提示，同样采用白透磨砂材质
     st.markdown("""
-        <div class="result-container">
-            <div class="sub-card" style="text-align: center; justify-content: center; color: rgba(0,0,0,0.4); font-size:1.05rem;">
-                🔮 待上传文件... 上传成功后将在此无缝预览分流结果。
+        <div class="result-section">
+            <div class="data-sub-card" style="text-align: center; padding: 3rem 0; color: rgba(0,0,0,0.3); font-weight:600;">
+                等待上传 Excel 表格文件以展示清洗分流结果...
             </div>
         </div>
     """, unsafe_allow_html=True)
